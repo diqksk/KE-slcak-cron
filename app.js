@@ -26,7 +26,8 @@ const postMsg = async (msgConfig) => {
  * QR체크용 메세지를 출력
  */
 const writeQRMsg = () => {
-  const hours = new Date().getHours();
+  const koreaDate = getKoreanTime();
+  const hours = koreaDate.getHours();
 
   const channelId =
     ENVIRONMENT === "PROD"
@@ -36,7 +37,7 @@ const writeQRMsg = () => {
   const msgConfig = {
     channel: channelId,
     text: `
-  ${hours < 12 ? `${now.getMonth()}/${now.getDate()}\n` : ""}
+  ${hours < 12 ? `${koreaDate.getMonth()}/${koreaDate.getDate()}\n` : ""}
   ${hours} <<--- 👉👉👉이 글에 ${
       hours < 12 ? "오전" : "오후"
     } QR 체크 부탁드립니다!👈👈👈
@@ -55,7 +56,7 @@ const printQRReminder = async () => {
       ? process.env.FREE_CHANNEL
       : process.env.TEST_CHANNEL;
 
-  const now = new Date();
+  const now = getKoreanTime();
   const time = now.getHours();
 
   const chat = await getLastBotChat(`${time < 12 ? "오전" : "오후"} QR`);
@@ -150,3 +151,10 @@ cron.schedule("30 * * * * *", printQRReminder);
 // cron.schedule("0 * * * * *", writeQRMsg);
 
 // printQRReminder();
+
+const getKoreanTime = () => {
+  const localNow = new Date();
+
+  localNow.setHours(localNow.getHours() + 9);
+  return localNow;
+};
