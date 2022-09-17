@@ -8,15 +8,6 @@ const client = new WebClient(process.env.BOT_TOKEN, {
 });
 
 /**
- * 오전 QR
- */
-cron.schedule("0 * * * * *", writeQRMsg);
-/**
- * 오후 QR
- */
-// cron.schedule("0 * * * * *", writeQRMsg);
-
-/**
  * 메세지를 채널에 전송하는 기능
  *
  * @param {{channel,text}}} msgConfig
@@ -142,5 +133,20 @@ const getReactions = async (timestamp) => {
 
   return message.reactions || [];
 };
+
+/**
+ * 오전 QR
+ */
+cron.schedule("0 * * * * *", writeQRMsg);
+/**
+ * 오후 QR
+ */
+
+/**
+ * 오전 QR 리마인더
+ */
+cron.schedule("30 * * * * *", printQRReminder);
+
+// cron.schedule("0 * * * * *", writeQRMsg);
 
 // printQRReminder();
