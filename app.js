@@ -26,7 +26,7 @@ const postMsg = async (msgConfig) => {
  * QR체크용 메세지를 출력
  */
 const writeQRMsg = () => {
-  const now = new Date();
+  const hours = new Date().getHours();
 
   const channelId =
     ENVIRONMENT === "PROD"
@@ -36,10 +36,10 @@ const writeQRMsg = () => {
   const msgConfig = {
     channel: channelId,
     text: `
-  ${now.getHours() < 12 ? `${now.getMonth()}/${now.getDate()}\n` : ""}
-  👉👉👉이 글에 ${
-    now.getHours() < 12 ? "오전" : "오후"
-  } QR 체크 부탁드립니다!👈👈👈
+  ${hours < 12 ? `${now.getMonth()}/${now.getDate()}\n` : ""}
+  ${hours} <<--- 👉👉👉이 글에 ${
+      hours < 12 ? "오전" : "오후"
+    } QR 체크 부탁드립니다!👈👈👈
       `,
   };
 
@@ -87,7 +87,7 @@ const printQRReminder = async () => {
   const msgConfig = {
     channel: channelId,
     text: `
-[${time < 12 ? "오전" : "오후"} 출석 결과]\n
+${time} <<-- [${time < 12 ? "오전" : "오후"} 출석 결과]\n
  🚀 전체인원: 20\n
  💚 출석인원: ${filtedMembers.length}\n
  💥 미출석: ${!unCheckedUserStr.length ? "전원출석🎉" : unCheckedUserStr}\n\n
