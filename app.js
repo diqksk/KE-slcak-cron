@@ -31,16 +31,14 @@ const writeQRMsg = () => {
 
   const channelId =
     ENVIRONMENT === "PROD"
-      ? process.env.FREE_CHANNEL
+      ? process.env.ATTENDANCE_CHANNEL
       : process.env.TEST_CHANNEL;
 
   const msgConfig = {
     channel: channelId,
     text: `
   ${hours < 12 ? `${koreaDate.getMonth()}/${koreaDate.getDate()}\n` : ""}
-  ${hours} <<--- 👉👉👉이 글에 ${
-      hours < 12 ? "오전" : "오후"
-    } QR 체크 부탁드립니다!👈👈👈
+👉👉👉이 글에 ${hours < 12 ? "오전" : "오후"} QR 체크 부탁드립니다!👈👈👈
       `,
   };
 
@@ -53,7 +51,7 @@ const writeQRMsg = () => {
 const printQRReminder = async () => {
   const channelId =
     ENVIRONMENT === "PROD"
-      ? process.env.FREE_CHANNEL
+      ? process.env.ATTENDANCE_CHANNEL
       : process.env.TEST_CHANNEL;
 
   const now = getKoreanTime();
@@ -88,7 +86,7 @@ const printQRReminder = async () => {
   const msgConfig = {
     channel: channelId,
     text: `
-${time} <<-- [${time < 12 ? "오전" : "오후"} 출석 결과]\n
+[${time < 12 ? "오전" : "오후"} 출석 결과]\n
  🚀 전체인원: 20\n
  💚 출석인원: ${filtedMembers.length}\n
  💥 미출석: ${!unCheckedUserStr.length ? "전원출석🎉" : unCheckedUserStr}\n\n
