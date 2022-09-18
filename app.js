@@ -1,8 +1,12 @@
 const { WebClient, LogLevel } = require("@slack/web-api");
 const cron = require("node-cron");
-
 require("dotenv").config();
 const ENVIRONMENT = process.env.DEV_ENVIRONMENT;
+const channelId =
+  ENVIRONMENT === "PROD"
+    ? process.env.ATTENDANCE_CHANNEL
+    : process.env.TEST_CHANNEL;
+
 const client = new WebClient(process.env.BOT_TOKEN, {
   logLevel: LogLevel.DEBUG,
 });
@@ -16,7 +20,7 @@ const postMsg = async (msgConfig) => {
   try {
     const result = await client.chat.postMessage(msgConfig);
 
-    console.log(result);
+    // console.log(result);
   } catch (error) {
     console.error(error);
   }
@@ -26,18 +30,13 @@ const postMsg = async (msgConfig) => {
  * QR체크용 메세지를 출력
  */
 const writeQRMsg = () => {
-  const koreaDate = getKoreanTime();
-  const hours = koreaDate.getHours();
-
-  const channelId =
-    ENVIRONMENT === "PROD"
-      ? process.env.ATTENDANCE_CHANNEL
-      : process.env.TEST_CHANNEL;
+  const now = new Date();
+  const hours = now.getHours();
 
   const msgConfig = {
     channel: channelId,
     text: `
-  ${hours < 12 ? `${koreaDate.getMonth()}/${koreaDate.getDate()}\n` : ""}
+  ${hours < 12 ? `${now.getMonth()}/${now.getDate()}\n` : ""}
 👉👉👉이 글에 ${hours < 12 ? "오전" : "오후"} QR 체크 부탁드립니다!👈👈👈
       `,
   };
@@ -49,14 +48,10 @@ const writeQRMsg = () => {
  * QR현황을 출력한다
  */
 const printQRReminder = async () => {
-  const channelId =
-    ENVIRONMENT === "PROD"
-      ? process.env.ATTENDANCE_CHANNEL
-      : process.env.TEST_CHANNEL;
-
-  const now = getKoreanTime();
+  const now = new Date();
   const time = now.getHours();
 
+  //마지막으로 봇이 오전 or 오후 QR이라고 말한 대화를 검색 (리액션 검색기준)
   const chat = await getLastBotChat(`${time < 12 ? "오전" : "오후"} QR`);
 
   const timestamp = chat.ts;
@@ -65,30 +60,43 @@ const printQRReminder = async () => {
 
   const reactionedUserList = new Set();
 
+  //리액션한 사람들을 필터링해서 set에 넣음
   reactions.forEach((reaction) => {
     reaction.users.forEach((user) => {
       reactionedUserList.add(user);
     });
   });
 
-  const { members } = await client.users.list();
-
-  const filtedMembers = members.filter((user) => {
-    return (
-      user.id !== "USLACKBOT" &&
-      !user.is_bot &&
-      !reactionedUserList.has(user.id)
-    );
+  //채널에 속한 맴버 리스트 가져오기
+  const { members } = await client.conversations.members({
+    channel: channelId,
+    limit: 30,
   });
 
-  const unCheckedUserStr = filtedMembers.map((member) => `<@${member.id}>`);
+  // const { members } = await client.users.list();
+
+  // const filtedMembers = members.filter((user) => {
+  //   return (
+  //     user.id !== "USLACKBOT" &&
+  //     !user.is_bot &&
+  //     !reactionedUserList.has(user.id)
+  //   );
+  // });
+
+  //리액션하지 않은 맴버들 검출
+  const filtedMembers = members.filter(
+    (member) =>
+      member !== process.env.BOT_MEMBER_ID && !reactionedUserList.has(member)
+  );
+
+  const unCheckedUserStr = filtedMembers.map((member) => `<@${member}>`);
 
   const msgConfig = {
     channel: channelId,
     text: `
 [${time < 12 ? "오전" : "오후"} 출석 결과]\n
- 🚀 전체인원: 20\n
- 💚 출석인원: ${filtedMembers.length}\n
+ 🚀 전체인원: ${members.length - 1}\n
+ 💚 출석인원: ${members.length - 1 - filtedMembers.length}\n
  💥 미출석: ${!unCheckedUserStr.length ? "전원출석🎉" : unCheckedUserStr}\n\n
 
  ${
@@ -119,13 +127,13 @@ const getLastBotChat = async (query) => {
 };
 
 /**
- * timestamp에 맞는 메세지에 해당하는 리액션한 정보들을 가져옴
+ * timestamp에 맞는 메세지에 해당하는 리액션한 정보들을 가져온다.
  * @param {string} timestamp
  * @returns {Promise<Object>}
  */
 const getReactions = async (timestamp) => {
   const { message } = await client.reactions.get({
-    channel: process.env.TEST_CHANNEL,
+    channel: channelId,
     timestamp,
     full: true,
   });
@@ -133,26 +141,12 @@ const getReactions = async (timestamp) => {
   return message.reactions || [];
 };
 
-/**
- * 오전 QR
- */
+//오전 QR
 cron.schedule("0 * * * * *", writeQRMsg);
-/**
- * 오후 QR
- */
+//오후 QR
+// cron.schedule("0 31 17 * * *", writeQRMsg);
 
-/**
- * 오전 QR 리마인더
- */
+//오전 QR 리마인더
 cron.schedule("30 * * * * *", printQRReminder);
-
-// cron.schedule("0 * * * * *", writeQRMsg);
-
-// printQRReminder();
-
-const getKoreanTime = () => {
-  const localNow = new Date();
-
-  localNow.setHours(localNow.getHours() + 9);
-  return localNow;
-};
+//오후 QR 리마인더
+// cron.schedule("0 0 18 * * *", printQRReminder);
