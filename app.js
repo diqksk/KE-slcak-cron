@@ -18,9 +18,16 @@ const client = new WebClient(process.env.BOT_TOKEN, {
  */
 const postMsg = async (msgConfig) => {
   try {
-    const result = await client.chat.postMessage(msgConfig);
-
-    // console.log(result);
+    const result = await client.chat.postMessage({
+      ...msgConfig,
+      attachments: [
+        {
+          text: "QR코드",
+          image_url: process.env.QR_IMG,
+          thumb_url: process.env.QR_IMG,
+        },
+      ],
+    });
   } catch (error) {
     console.error(error);
   }
@@ -40,8 +47,11 @@ const writeQRMsg = () => {
 👉👉👉이 글에 ${hours < 12 ? "오전" : "오후"} QR 체크 부탁드립니다!👈👈👈
       `,
   };
-
-  postMsg(msgConfig);
+  try {
+    postMsg(msgConfig);
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 /**
@@ -143,6 +153,7 @@ const getReactions = async (timestamp) => {
 
 //오전 QR (08시 00분)
 cron.schedule("0 8 * * 1-5", writeQRMsg);
+// cron.schedule("*/2 * * * * 1-5", writeQRMsg); <<-- 테스트용
 //오후 QR (17시 31분)
 cron.schedule("31 17 * * 1-5", writeQRMsg);
 
