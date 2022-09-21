@@ -18,22 +18,14 @@ const client = new WebClient(process.env.BOT_TOKEN, {
  */
 const postMsg = async (msgConfig) => {
   try {
-    const result = await client.chat.postMessage({
-      ...msgConfig,
-      attachments: [
-        {
-          text: "QR코드",
-          image_url: process.env.QR_IMG,
-          thumb_url: process.env.QR_IMG,
-        },
-      ],
-    });
+    const result = await client.chat.postMessage(msgConfig);
   } catch (error) {
     console.error(error);
   }
 };
 
 /**
+ *
  * QR체크용 메세지를 출력
  */
 const writeQRMsg = () => {
@@ -42,6 +34,13 @@ const writeQRMsg = () => {
 
   const msgConfig = {
     channel: channelId,
+    attachments: [
+      {
+        text: "QR코드",
+        image_url: process.env.QR_IMG,
+        thumb_url: process.env.QR_IMG,
+      },
+    ],
     text: `
   ${hours < 12 ? `${now.getMonth()}/${now.getDate()}\n` : ""}
 👉👉👉이 글에 ${hours < 12 ? "오전" : "오후"} QR 체크 부탁드립니다!👈👈👈
