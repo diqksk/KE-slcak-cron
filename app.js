@@ -42,7 +42,7 @@ const writeQRMsg = () => {
       },
     ],
     text: `
-  ${hours < 12 ? `${now.getMonth()}/${now.getDate()}\n` : ""}
+  ${hours < 12 ? `${Number(now.getMonth()) + 1}/${now.getDate()}\n` : ""}
 👉👉👉이 글에 ${hours < 12 ? "오전" : "오후"} QR 체크 부탁드립니다!👈👈👈
       `,
   };
