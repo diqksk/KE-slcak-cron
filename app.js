@@ -150,13 +150,13 @@ const getReactions = async (timestamp) => {
   return message.reactions || [];
 };
 
-//오전 QR (08시 00분)
-cron.schedule("0 8 * * 1-5", writeQRMsg);
+//오전 QR (07시 30분)
+cron.schedule("30 7 * * 1-5", writeQRMsg);
 // cron.schedule("*/2 * * * * 1-5", writeQRMsg); <<-- 테스트용
 //오후 QR (17시 31분)
 cron.schedule("31 17 * * 1-5", writeQRMsg);
 
-//오전 QR 리마인더 (08시 25분)
-cron.schedule("25 8 * * 1-5", printQRReminder);
+//오전 QR 리마인더 (08시 20분)
+cron.schedule("20 8 * * 1-5", printQRReminder);
 //오후 QR 리마인더 (17시 50분)
 cron.schedule("50 17 * * 1-5", printQRReminder);
